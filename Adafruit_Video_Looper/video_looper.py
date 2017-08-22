@@ -72,13 +72,14 @@ class VideoLooper(object):
         pygame.mouse.set_visible(False)
         size = self._size = (pygame.display.Info().current_w, pygame.display.Info().current_h)
         self._screen = pygame.display.set_mode(size, pygame.FULLSCREEN)
+        self._bgimage    = self._load_bg_image()
         self._blank_screen()
         # Set other static internal state.
         self._extensions = self._player.supported_extensions()
         self._small_font = pygame.font.Font(None, 50)
         self._big_font   = pygame.font.Font(None, 250)
         self._running    = True
-        self._bgimage    = self._load_bg_image()
+
 
 
     def _print(self, message):
@@ -138,13 +139,18 @@ class VideoLooper(object):
     def _blank_screen(self):
         """Render a blank screen filled with the background color."""
         self._screen.fill(self._bgcolor)
+        if self._bgimage is not None:
+            rect = self._bgimage.get_rect()
+            self._screen.blit(self._bgimage, rect)
         pygame.display.update()
 
-    def _load_bg_image(self, image):
+    def _load_bg_image(self):
         """Render background image"""
-        image = self._config.get('video_looper', 'bgimage')
-        image = pygame.image.load(image)
-        image = pygame.transform.scale(image, self._size)
+        image = None
+        if self._config.has_option('video_looper', 'bgimage'):
+            image = self._config.get('video_looper', 'bgimage')
+            image = pygame.image.load(image)
+            image = pygame.transform.scale(image, self._size)
         return image
 
     def _render_text(self, message, font=None):
@@ -197,7 +203,7 @@ class VideoLooper(object):
         label = self._render_text(message)
         lw, lh = label.get_size()
         sw, sh = self._screen.get_size()
-        self._screen.fill(self._bgimage)
+        self._screen.fill(self._bgcolor)
         self._screen.blit(label, (sw/2-lw/2, sh/2-lh/2))
         pygame.display.update()
 
